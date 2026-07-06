@@ -2,18 +2,14 @@ import Order from '../models/Order.js';
 
 class TrendingService {
   /**
-   * Fetch trending products (recent 30-day sales)
+   * Fetch trending products (All time for demo data)
    */
   async getTrendingProducts(limit = 10) {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
     const products = await Order.aggregate([
       {
         $match: {
           isArchived: { $ne: true },
           OrderStatus: { $nin: ['Cancelled', 'Returned'] },
-          OrderDate: { $gte: thirtyDaysAgo },
         },
       },
       {
@@ -39,27 +35,23 @@ class TrendingService {
           totalQuantitySold: 1,
           totalRevenue: { $round: ['$totalRevenue', 2] },
           ordersCount: 1,
-          trendPeriod: '30d',
+          trendPeriod: 'all-time',
         },
       },
     ]);
 
-    return { period: '30d', products };
+    return { period: 'all-time', products };
   }
 
   /**
-   * Fetch trending categories (recent 30-day sales)
+   * Fetch trending categories (All time for demo data)
    */
   async getTrendingCategories(limit = 10) {
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
     const categories = await Order.aggregate([
       {
         $match: {
           isArchived: { $ne: true },
           OrderStatus: { $nin: ['Cancelled', 'Returned'] },
-          OrderDate: { $gte: thirtyDaysAgo },
         },
       },
       {
@@ -79,12 +71,12 @@ class TrendingService {
           totalRevenue: { $round: ['$totalRevenue', 2] },
           totalQuantitySold: 1,
           ordersCount: 1,
-          trendPeriod: '30d',
+          trendPeriod: 'all-time',
         },
       },
     ]);
 
-    return { period: '30d', categories };
+    return { period: 'all-time', categories };
   }
 }
 

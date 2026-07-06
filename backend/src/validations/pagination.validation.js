@@ -27,6 +27,18 @@ const validatePagedListing = [
     .withMessage('Limit must be between 1 and 100'),
 
   query('sort').optional().trim(),
+
+  query('OrderStatus')
+    .optional({ values: 'falsy' })
+    .isIn(['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned'])
+    .withMessage('Invalid OrderStatus value'),
+
+  query('status')
+    .optional({ values: 'falsy' })
+    .isIn(['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned'])
+    .withMessage('Invalid status value'),
+
+  query('search').optional({ values: 'falsy' }).trim(),
 ];
 
 const validateInfinitePagination = [

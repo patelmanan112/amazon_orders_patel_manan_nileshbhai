@@ -15,6 +15,8 @@ const Profile = lazy(() => import('../pages/Profile'));
 const OrdersList = lazy(() => import('../pages/Orders/OrdersList'));
 const UsersList = lazy(() => import('../pages/Users/UsersList'));
 const SearchPage = lazy(() => import('../pages/SearchPage'));
+const TrendingPage = lazy(() => import('../pages/TrendingPage'));
+const ShipmentsPage = lazy(() => import('../pages/ShipmentsPage'));
 
 export default function AppRoutes() {
   return (
@@ -33,6 +35,8 @@ export default function AppRoutes() {
           <Route path="settings" element={<div>Settings Component Placeholder</div>} />
           <Route path="orders" element={<OrdersList />} />
           <Route path="search" element={<SearchPage />} />
+          <Route path="trending" element={<TrendingPage />} />
+          <Route path="shipments" element={<ShipmentsPage />} />
           
           <Route path="users" element={<AdminRoute><UsersList /></AdminRoute>} />
         </Route>

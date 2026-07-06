@@ -19,8 +19,8 @@ const OrdersList = () => {
     dispatch(fetchOrders({
       page: filters.page,
       limit: filters.limit,
-      search: filters.search,
-      status: filters.status,
+      search: filters.search || undefined,
+      OrderStatus: filters.status || undefined,
       sort: filters.sort,
     }));
   }, [dispatch, filters]);
@@ -128,6 +128,7 @@ const OrdersList = () => {
             <input
               type="text"
               placeholder="Search orders..."
+              value={filters.search || ''}
               onChange={(e) => handleSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-indigo-500/20 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500/60 transition-all"
             />

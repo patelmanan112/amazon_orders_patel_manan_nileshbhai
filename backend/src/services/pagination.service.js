@@ -17,6 +17,31 @@ class PaginationService {
     };
   }
 
+  buildFilterFromQuery(query = {}) {
+    const filter = {};
+    const orderStatus = query.OrderStatus || query.status;
+
+    if (orderStatus) {
+      filter.OrderStatus = orderStatus;
+    }
+
+    if (query.search) {
+      filter.$or = [
+        { CustomerName: { $regex: query.search, $options: 'i' } },
+        { ProductName: { $regex: query.search, $options: 'i' } },
+        { OrderID: { $regex: query.search, $options: 'i' } },
+        { Brand: { $regex: query.search, $options: 'i' } },
+        { Category: { $regex: query.search, $options: 'i' } },
+        { City: { $regex: query.search, $options: 'i' } },
+        { State: { $regex: query.search, $options: 'i' } },
+        { OrderStatus: { $regex: query.search, $options: 'i' } },
+        { PaymentMethod: { $regex: query.search, $options: 'i' } },
+      ];
+    }
+
+    return filter;
+  }
+
   async paginateOrders(filter, query, defaults = {}) {
     const page = parseInt(query.page ?? defaults.page ?? 1, 10);
     const limit = parseInt(query.limit ?? defaults.limit ?? 10, 10);
@@ -42,14 +67,14 @@ class PaginationService {
    * Explicit paged listing — GET /api/v1/orders/paged?page=1&limit=50
    */
   async getPagedListing(query) {
-    return this.paginateOrders({}, query, { page: 1, limit: 50 });
+    return this.paginateOrders(this.buildFilterFromQuery(query), query, { page: 1, limit: 50 });
   }
 
   /**
    * Infinite scroll — GET /api/v1/orders/infinite?page=1
    */
   async getInfiniteScroll(query) {
-    const result = await this.paginateOrders({}, query, {
+    const result = await this.paginateOrders(this.buildFilterFromQuery(query), query, {
       page: 1,
       limit: 20,
     });

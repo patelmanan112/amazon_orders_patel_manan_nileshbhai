@@ -19,7 +19,7 @@ class SearchService {
     };
     
     // Ensure we don't return archived orders
-    filter.isArchived = false;
+    filter.isArchived = { $ne: true };
 
     const result = await Order.paginate(filter, options);
     return {

@@ -3,17 +3,70 @@ import api from '../../services/api';
 import { setGlobalLoading } from '../ui/uiSlice';
 import { toast } from 'react-toastify';
 
+const cleanParams = (params = {}) =>
+  Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== '' && value != null && value !== undefined)
+  );
+
+const SEARCH_ENDPOINTS = {
+  all: '/orders/search',
+  customer: '/orders/search/customer',
+  product: '/orders/search/product',
+  orderId: '/orders/search/tracking',
+  date: '/orders/search/date',
+};
+
 export const fetchOrders = createAsyncThunk(
   'orders/fetchOrders',
   async (params, { dispatch, rejectWithValue }) => {
     dispatch(setGlobalLoading(true));
     try {
-      const response = await api.get('/orders/paged', { params });
+      const response = await api.get('/orders/paged', { params: cleanParams(params) });
       dispatch(setGlobalLoading(false));
       return response.data;
     } catch (error) {
       dispatch(setGlobalLoading(false));
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch orders');
+    }
+  }
+);
+
+export const searchOrders = createAsyncThunk(
+  'orders/searchOrders',
+  async ({ q, filter = 'all', page = 1, limit = 10, sort = '-date' }, { dispatch, rejectWithValue }) => {
+    dispatch(setGlobalLoading(true));
+    try {
+      const endpoint = SEARCH_ENDPOINTS[filter] || SEARCH_ENDPOINTS.all;
+      const response = await api.get(endpoint, {
+        params: cleanParams({ q, page, limit, sort }),
+      });
+      dispatch(setGlobalLoading(false));
+      return response.data;
+    } catch (error) {
+      dispatch(setGlobalLoading(false));
+      return rejectWithValue(error.response?.data?.message || 'Search failed');
+    }
+  }
+);
+
+export const fetchShipments = createAsyncThunk(
+  'orders/fetchShipments',
+  async (params, { dispatch, rejectWithValue }) => {
+    dispatch(setGlobalLoading(true));
+    try {
+      const response = await api.get('/orders/paged', {
+        params: cleanParams({
+          page: params.page,
+          limit: params.limit,
+          sort: params.sort,
+          OrderStatus: params.OrderStatus,
+        }),
+      });
+      dispatch(setGlobalLoading(false));
+      return response.data;
+    } catch (error) {
+      dispatch(setGlobalLoading(false));
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch shipments');
     }
   }
 );
@@ -74,8 +127,24 @@ const initialState = {
     page: 1,
     limit: 10,
   },
+  shipments: [],
+  shipmentsPagination: {
+    totalDocs: 0,
+    totalPages: 0,
+    page: 1,
+    limit: 10,
+  },
+  searchResults: [],
+  searchPagination: {
+    totalDocs: 0,
+    totalPages: 0,
+    page: 1,
+    limit: 10,
+  },
   filters: loadFilters(),
   status: 'idle',
+  shipmentsStatus: 'idle',
+  searchStatus: 'idle',
   error: null,
 };
 
@@ -114,6 +183,48 @@ const orderSlice = createSlice({
       })
       .addCase(fetchOrders.rejected, (state, action) => {
         state.status = 'failed';
+        state.error = action.payload;
+      })
+      // Fetch shipments
+      .addCase(fetchShipments.pending, (state) => {
+        state.shipmentsStatus = 'loading';
+      })
+      .addCase(fetchShipments.fulfilled, (state, action) => {
+        state.shipmentsStatus = 'succeeded';
+        const responseData = action.payload.data || [];
+        const responsePagination = action.payload.pagination || {};
+
+        state.shipments = responseData;
+        state.shipmentsPagination = {
+          totalDocs: responsePagination.totalRecords || 0,
+          totalPages: responsePagination.totalPages || 0,
+          page: responsePagination.currentPage || 1,
+          limit: responsePagination.limit || 10,
+        };
+      })
+      .addCase(fetchShipments.rejected, (state, action) => {
+        state.shipmentsStatus = 'failed';
+        state.error = action.payload;
+      })
+      // Search
+      .addCase(searchOrders.pending, (state) => {
+        state.searchStatus = 'loading';
+      })
+      .addCase(searchOrders.fulfilled, (state, action) => {
+        state.searchStatus = 'succeeded';
+        const responseData = action.payload.data || [];
+        const responsePagination = action.payload.pagination || {};
+
+        state.searchResults = responseData;
+        state.searchPagination = {
+          totalDocs: responsePagination.totalRecords || 0,
+          totalPages: responsePagination.totalPages || 0,
+          page: responsePagination.currentPage || 1,
+          limit: responsePagination.limit || 10,
+        };
+      })
+      .addCase(searchOrders.rejected, (state, action) => {
+        state.searchStatus = 'failed';
         state.error = action.payload;
       })
       // Create
